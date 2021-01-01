@@ -1,13 +1,13 @@
 var sysex = [];
 
-function updateCurrentWaveform(samples)
+function updateCurrentWavetable(samples)
 {
 	var data = 'samples=';
 	for (var i = 0; i < samples.length; i++)
 	{
 		data += (samples[i] + ',');
 	}
-	$.post('services/data.php?job=update_wave', data, function(d, s) {waveformHasUpdated(d, s);});
+	$.post('services/data.php?job=update_wave', data, function(d, s) {wavetableHasUpdated(d, s);});
 }
 
 function wavetableHasUpdated(data)
@@ -17,6 +17,13 @@ function wavetableHasUpdated(data)
 	$('#uploaded').show();
 	$('#wavetable_name').prop('disabled', true);
 	$('#frame_size').prop('disabled', true);
+	$('#code_override').val('');
+	refreshMyWavetables();
+}
+
+function overrideDownload(code)
+{
+	$('#code_override').val(code);
 }
 
 function fillFileName(el)
@@ -30,78 +37,31 @@ function fillFileName(el)
 	$('#invalid_file').hide();
 	$('#wavetable_name').prop('disabled', false);
 	$('#frame_size').prop('disabled', false);
-	$('#uploaded').hide();
-	$('.wavoption').addAttr('disabled');
-}
-
-function badFileError()
-{
-	$('#invalid_file').show();
-}
-
-function refreshMyWaveforms()
-{
-	$('#invalid_file').hide();
-	$.get('services/data.php?job=session_list', function(d, s) {populateMyWaveforms(d, s);});
-}
-
-function populateMyWaveforms(d, s)
-{
-	var data = JSON.parse(d);
-	if (data !== null && data.length) {
-		var table = jQuery('<table class="table table-condensed table-hover table-striped"></table>');
-		var f = 0;
-		for (var i = data.length - 1; i >= 0; i--)
-		{
-			var name = data[i]['name'];
-			if (!name) {continue;}
-			f++;
-			var tr = jQuery('<tr id="my' + i + '"></tr>');
-			var td = jQuery('<td class="col-md-9 col-lg-9"></td>');
-			td.html(name);
-			tr.append(td);
-			
-			var load = '<button data-loading-text="<span class=\'glyphicon glyphicon-refresh spinning\'></span>" class="btn btn-sm btn-primary start" title="Open in Waveform Generator" onclick="loadMyWaveform(' + i + ', this)"><span class="glyphicon glyphicon-export"></span> </button>';
-			var del = '<button class="btn btn-sm btn-primary" onclick="deleteMyWaveform(' + i + ')" title="Remove from My Waveforms"><span class="glyphicon glyphicon-trash"></span> </button>';
-			var td = jQuery('<td class="col-md-3 col-lg-3 align_right">' + load + del + '</td>');
-			tr.append(td);
-			
-			table.append(tr);
-		}
-		if (!f) {return;}
-		$('#session').empty().append(table);
+	$('.alert').hide();
+	$('.wavoption').attr('disabled');
+	var m = $('#upload_file_name').val().match(/([A-Za-z0-9 _-]+)\.wav/i);
+	if (m !== null) {
+		$('#wavetable_name').val(m[1].substring(0,8));
 	}
 }
 
-function deleteMyWaveform(id)
+function badFileError() {$('#invalid_file').show();}
+
+function wavetableTooBig() {$('#too_big').show();}
+
+function shareSuccess() {$('#thanks').show();}
+
+function refreshMyWavetables()
 {
-	$.get('services/data.php?job=delete_session&id=' + id);
-	$('#my' + id).remove();
+	$('#invalid_file').hide();
+	$.get('services/my.php', function(d, s) {$('#session').empty().append(d);});
 }
 
-function loadMyWaveform(id, button)
-{
-	$(button).button('loading');
-	$('#upload_file_name').val('');
-	$('#upload_button').attr('disabled', 1);
-	$.get('services/data.php?job=load_session&id=' + id, function(d, s) {loadIntoEditor(d, s, false);});
-}
-
-function loadSharedWaveform(id, button)
-{
-	$(button).button('loading');
-	$('#upload_file_name').val('');
-	$('#upload_button').attr('disabled', 1);
-	$.get('services/data.php?job=load_shared&id=' + id, function(d, s) {loadIntoEditor(d, s, true);});
-}
-
-function shareWaveform()
+function shareWavetable()
 {
 	// Get an encode field values
-	var n = $('#share_name').val();
 	var d = $('#share_desc').val();
 	var s = $('#share_sig').val();
-	n = encodeURI(n);
 	d = encodeURI(d);
 	s = encodeURI(s);
 	
@@ -112,123 +72,30 @@ function shareWaveform()
 	$('#share_wave').modal('hide');
 	$('.wavoption-share').attr('disabled', 1);
 	
-	$.get('services/data.php?job=share_wave&name=' + n + '&desc=' + d + '&sig=' + s, function(d, s) {showThanksBox(d);refreshSharedWaveforms();});
+	$.get('services/share.php?desc=' + d + '&sig=' + s, function(d, s) {$('#thanks').show();refreshSharedWavetables();});
 }
 
-function showThanksBox(d)
-{
-	var data = JSON.parse(d);
-	if (data !== null) {
-		if (data['status'] == 'Duplicate') {
-			$('#duplicate').show();
-			$('#thanks').hide();
-		} else if (data['status'] == 'OK') {
-			$('#thanks').show();
-			$('#duplicate').hide();
-		}
-	}
-}
-
-function refreshSharedWaveforms()
+function refreshSharedWavetables()
 {	
-	$.get('services/data.php?job=shared_list', function(d, s) {populateSharedWaveforms(d, s);});
+	$.get('services/library.php', function(d, s) {$('#shared').empty().append(d);});
 }
 
-function populateSharedWaveforms(d, s)
-{
-	var data = JSON.parse(d);
-	if (data !== null && data.length) {
-		var table = jQuery('<table id="shared_waveform_table" class="table table-condensed table-hover table-striped"></table>');
-		var f = 0;
-		for (var i = 0; i < data.length; i++)
-		{
-			var name = data[i]['name'];
-			var id = data[i]['id'];
-			if (!name) {continue;}
-			f++;
-			var tr = jQuery('<tr id="shared' + id + '"></tr>');
-			var td = jQuery('<td class="waveform_name col-md-9 col-lg-9"></td>');
-			td.html(name);
-			tr.append(td);
-			
-			var load = '<button data-loading-text="<span class=\'glyphicon glyphicon-refresh spinning\'></span>" class="btn btn-sm btn-primary start" title="Open in Waveform Generator" onclick="loadSharedWaveform(' + id + ', this)"><span class="glyphicon glyphicon-export"></span> </button>';
-			var info = '<button class="btn btn-sm btn-primary" onclick="getInformation(' + id + ')" title="Waveform Information"><span class="glyphicon glyphicon-info-sign"></span> </button>';
-			var td = jQuery('<td class="align_right col-md-3 col-lg-3">' + load + info + '</td>');
-			tr.append(td);
-			
-			table.append(tr);
-		}
-		if (!f) {return;}
-		$('#shared').empty().append(table);
-	}
-}
-
-function showAllWaveforms()
+function showAllWavetables()
 {
 	$('#shared_query').val('');
-	$('#shared_waveform_table TR').show();
+	$('#shared_wavetable_table TR').show();
 }
 
-function searchWaveforms()
+function searchWavetables()
 {
 	var q = new RegExp($('#shared_query').val(), 'i');
-	$('#shared_waveform_table TR').hide();
+	$('#shared_wavetable_table TR').hide();
 	$('.open_description').remove();
-	$.each($('#shared_waveform_table TR'), function() 
+	$.each($('#shared_wavetable_table TR'), function() 
 			{
-				var n = $(this).find('.waveform_name').html();
+				var n = $(this).find('.wavetable_name').html();
 				if (n.match(q)) {$(this).show();}
 			}
 	);
 }
 
-function enableAudioControls()
-{
-	$('.audio_control').removeAttr('disabled');
-}
-
-function play(pitch)
-{
-	document.getElementById('audio_player_' + pitch).play();
-}
-
-function getInformation(id)
-{
-	$.get('services/data.php?job=info&id=' + id, function(d, s) {displayInformation(d, s);});
-}
-
-function displayInformation(d, s)
-{
-	var data = JSON.parse(d);
-	if (data !== null) {
-		$('.open_description').remove();
-		var id = data['id'];
-		var desc = data['description'];
-		var time = data['share_time'];
-		var signature = data['signature'];
-		var samples = data['samples'];
-		var sigline = signature ? ('<strong>@' + signature + '</strong> ') : '';
-		
-		var div = jQuery('<div class="open_description panel panel-default"></div>');
-		var body = jQuery('<div class="panel-body"></div>');
-		var close = jQuery('<p><button class="close" type="button" onclick="$(\'.open_description\').remove()" class="pull-right">&times;</button></p>');
-		body.append(close);
-		var desc = jQuery('<p>' + desc + '</p>');
-		body.append(desc);
-		var thumb = jQuery('<div id="wave_thumb"></div>');
-		body.append(thumb);
-		var time = jQuery('<p><i>' + sigline + 'shared on ' + time + '</i></p>');
-		body.append(time);
-		div.append(body);
-		
-		$('#shared' + id + ' .waveform_name').append(div);
-		var wavethumb = new WaveThumbnail(samples);
-		wavethumb.drawInto('wave_thumb');
-	}
-	
-}
-
-function maximize()
-{
-	$.get('services/data.php?job=maximize', function(d, s) {loadIntoEditor(d, s, 0);refreshMyWaveforms();});
-}

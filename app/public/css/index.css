@@ -37,6 +37,14 @@ input[readonly] {
 	margin-top: 10px;
 }
 
+.sig {
+  color: #aaa;
+}
+
+.description {
+  margin: 4px 0px 4px 8px;
+}
+
 #current_wavetable_name {
 	text-align: center;
 	font-weight: bold;
