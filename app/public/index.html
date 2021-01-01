@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WAV2Pro3</title>
+
+    <!-- Bootstrap -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+	
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+	<script src="js/validator.js"></script>
+	
+	<!-- Application-Specific -->
+  <link rel="stylesheet" href="css/index.css">
+  <script src="js/interface.js"></script>
+
+  </head>
+  <body>
+<div class="container-fluid">  
+   <nav class="navbar navbar-inverse">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">WAV2Pro3</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="#About">About</a></li>
+            <li><a href="#Uploads">What To Upload</a></li>
+            <li><a href="#Privacy">Privacy</a></li>
+            <li><a href="#Contact">Contact</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+
+
+    </nav>
+
+<div class="content">
+<div class="col-md-4 col-lg-4">
+	<div class="panel-group" id="accordion">
+	<div class="panel panel-default">
+		<div class="panel-heading">
+	    	<span class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapseSession">My Wavetables</a></span>
+	  	</div>
+			  
+	<div id="collapseSession" class="panel-collapse collapse in">
+	<div class="panel-body">
+		<div id="session">
+    		<p>As you create or upload new wavetables, your previous wavetables from this session will be moved to this panel, so that you may <span class="glyphicon glyphicon-export"></span> get them back.</p>
+    		<p>Note that wavetables are not saved between sessions, so make sure to <span class="glyphicon glyphicon-download"></span> download anything you want to keep.</p>
+    		<p>Please consider <span class="glyphicon glyphicon-share-alt"></span> sharing the wavetables that you create. It's easy, private, and helpful to other Pro 3 users.</p>
+    	</div>
+	</div>
+	</div>
+	</div> <!--  /.panel -->
+
+	<div class="panel panel-default">
+		<div class="panel-heading">
+	    	<span class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapseShared">Wavetable Library</a></span>
+	  	</div>
+		
+	<div id="collapseShared" class="panel-collapse collapse">
+		<div class="input-group">
+		    <span class="input-group-btn">
+		    	<button class="btn btn-default" title="Show All" type="button" onclick="showAllWavetables()"><span class="glyphicon glyphicon-list"></span></button></span>
+		    </span>
+     		<input type="text" class="form-control" placeholder="Search by name..." id="shared_query">
+      		<span class="input-group-btn">
+        		<button class="btn btn-default" type="button" onclick="searchWavetables()"><span class="glyphicon glyphicon-search"></span></button>
+      		</span>
+    	</div><!-- /input-group -->	
+    	    
+	<div class="panel-body">
+	<div id="shared">
+    No shared wavetables...
+    </div>
+	  </div>
+	</div>
+	</div> <!--  /.panel -->
+	</div> <!--  /.panel-group -->
+
+</div>
+
+<div class="col-md-8 col-lg-8">
+
+<div class="alert alert-danger" role="alert" id="invalid_file" style="display:none">
+  <button type="button" class="close" onclick="$('#invalid_file').hide()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <strong>Sorry!</strong> The file you uploaded was not valid. Please provide a 16-bit WAV file.
+</div>
+
+<div class="alert alert-success" role="alert" id="uploaded" style="display:none">
+  <button type="button" class="close" onclick="$('#invalid_file').hide()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <strong>Success!</strong> Your wavetable is ready for download!
+</div>
+
+<div class="alert alert-success" role="alert" id="thanks" style="display:none">
+  <button type="button" class="close" onclick="$('#thanks').hide()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <strong>Thank you!</strong> Your wavetable has successfully been added to the Wavetable Library. Your contribution is greatly appeciated.
+</div>
+
+	<div class="panel panel-default">
+	  <div class="panel-heading">
+	    <span class="panel-title">Wavetable Generator</span>
+	  </div>
+	  <div class="panel-body">
+	  
+	  <!-- Upload form -->
+	  <div class="row">
+	  <div class="col-md-12 col-lg-12">
+
+	  <form method="post" action="services/upload.php" id="upload_form" enctype="multipart/form-data" target="upload_frame">
+			<div class="input-group">
+                <span class="input-group-btn">
+                    <span class="btn btn-primary btn-file">
+                        <span class="glyphicon glyphicon-file"></span> Browse&hellip; <input type="file" name="wav" accept=".wav" id="upload_file" onchange="fillFileName(this)">
+                    </span>
+                </span>
+                <input type="text" class="form-control" readonly id="upload_file_name" name="upload_file_name">
+                <span class="input-group-btn">
+       			 <button disabled id="upload_button" class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-upload"></span> Upload</button>
+            </span>
+            </div>
+
+      <div class="input-group">
+        <label for="wavetable_name">Wavetable Name: </label>
+        <input type="text" required class="form-control" id="wavetable_name" name="wavetable_name">
+      </div>
+
+      <div class="input-group">
+        <label for="frame_size">Frame Size: </label>
+        <select class="form-control" name="frame_size" id="frame_size">
+          <option value="2048">2048 Samples (Serum)</option>
+          <option value="1024">1024 Samples</option>
+          <option value="512">512 Samples</option>
+          <option value="256">256 Samples</option>
+        </select>
+      </div>
+
+    </form>
+	  </div>
+	  </div> <!-- /.row -->
+	  
+	  <div class="row separated">
+	  	  <div class="col-md-12 col-lg-12">
+          <div class="btn-group btn-group-justified" role="group" aria-label="options">	  
+			  <a disabled href="#" class="btn btn-primary wavoption" data-toggle="modal" data-target="#share_wave"><span class="glyphicon glyphicon-share-alt"></span> Share</a>
+        <a disabled href="#" class="btn btn-primary wavoption" data-toggle="modal" data-target="#sysex_send"><span class="glyphicon glyphicon-download"></span> SysEx</a>
+        <a disabled href="#" class="btn btn-primary wavoption" data-toggle="modal" data-target="#midi_send"><span class="glyphicon glyphicon-download"></span> MIDI</a>
+		  </div>
+		  </div>
+	  </div>
+	  
+	  </div> <!-- /.panel-body -->
+	</div>
+
+</div>
+
+
+
+<!-- The text sections -->
+<div class="col-md-12 col-lg-12">
+	<a id="About"></a>
+	<div class="panel panel-default">
+	
+	<div class="panel-heading"><span class="panel-title">About WAV2Pro3</span></div>
+	<div class="panel-body">
+	
+	<p><i>WAV2Pro3</i> is an online wavetable conversion application for users of the <strong>Sequential Pro 3</strong> synthesizer.</p>
+	
+	<p>It allows you to upload a WAV file containing a group of single-cycle waveforms, and then download a wavetable system exclusive file.</p>
+	
+  <p><i>WAV2Pro3</i> is an open-source project, and can be found on <a href="https://github.com/Chysn/pro3-wt-cli" target="_blank">GitHub</a>.</p>
+
+	<p><a href="#"><span class="glyphicon glyphicon-home"></span> Top</a></p>
+	
+	</div>
+
+	</div>
+
+</div>
+
+<div class="col-md-12 col-lg-12">
+	<a id="Uploads"></a>
+	<div class="panel panel-default">
+	
+	<div class="panel-heading"><span class="panel-title">What to Upload</span></div>
+	<div class="panel-body">
+	
+    <p>WAV2Pro3 accepts wavetables as multiple waveforms in a single WAV file. Requirements are:</p>
+    <ul>
+      <li>The WAV file data must be 16-bit signed</li>
+      <li>Up to 256 waveforms (at 2048 samples) may be in the WAV file. WAV2Pro3 will automatically resize the wavetable to 16 waveforms by either morphing missing waveforms, or dropping extra waveforms</li>
+    </ul>
+
+    <p><strong>Serum</strong>: From the Serum wavetable editor, choose or create your wavetable. Then, click on the Export menu, then select "Export All As 16-bit (.wav)..." Choose a file path and name on your computer. Then click Browse on this page to find your .wav file.</p>
+    
+	<p><a href="#"><span class="glyphicon glyphicon-home"></span> Top</a></p>
+	
+	</div>
+
+	</div>
+
+</div>
+
+<div class="col-md-12 col-lg-12">
+	<a id="Privacy"></a>
+	<div class="panel panel-default">
+	
+	<div class="panel-heading"><span class="panel-title">Privacy</span></div>
+	<div class="panel-body">
+		
+	<p><i>WAV2Pro3</i> strips metadata from uploaded WAV files. If you share your wavetables, none of the original XML metadata
+	will be saved in the database. Wavetables downloaded as system exclusive files will contain only the data necessary to describe the
+	physical characteristics of the waveforms.</p>
+	
+	<p><a href="#"><span class="glyphicon glyphicon-home"></span> Top</a></p>
+	
+	</div>
+
+	</div>
+
+</div>
+
+<div class="col-md-12 col-lg-12">
+	<a id="Contact"></a>
+	<div class="panel panel-default">
+	
+	<div class="panel-heading"><span class="panel-title">Contact</span></div>
+	<div class="panel-body">
+	
+	<p>If you have questions, comments, bug reports, or ideas for future enhancements, I can be reached via private message at 
+	<a href="https://forum.sequential.com/" target="_blank">Sequential Forum</a> as user <strong>chysn</strong>.</p>
+	
+	<p>The Sequential forum has a topic dedicated to <i>WAV2Pro3</i> support, which is
+	<a href="https://forum.sequential.com/index.php/topic,38.0.html" target="_blank">right here</a>.</p>
+	
+	<p><a href="#"><span class="glyphicon glyphicon-home"></span> Top</a></p>
+		
+	</div>
+
+	</div>
+
+</div>
+
+
+</div> <!-- end of content -->
+
+<footer class="col-md-12 col-lg-12"><p>&copy; 2020, The Beige Maze Laboratory</p>
+
+<p>This website has no affiliation with Sequential. This is an independent, open-source project. This is purely experimental software, and no guarantees are made as to its functionality, usefulness for a particular purpose, or availability.</p>
+</footer>
+
+</div> <!-- /.container -->
+
+<div class="modal fade" id="sysex_send">
+  <form id="download_form" action="services/download.php" onsubmit="$('#sysex_send').modal('hide')" method="get" target="_blank" data-toggle="validator" role="form">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Download SysEx</h4>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="type" value="sysex">
+
+	  <div class="form-group">
+    	<label for="waveform_number">Wavetable Position</label>
+		  <input type="number" min="33" max="64" required id="wavetable_number" class="form-control" placeholder="33-64" name="number" aria-describedby="basic-addon1">
+  	  </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-download"></span> Download SysEx</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+  </form>
+</div><!-- /.modal -->
+
+<div class="modal fade" id="midi_send">
+  <form id="evolver_download_form" action="services/download.php" onsubmit="$('#pro3_send').modal('hide')" method="get" target="_blank" data-toggle="validator" role="form">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">MIDI Send</h4>
+      </div>
+      <div class="modal-body">
+
+        <p>This is a planned feature for a future version of WAV2Pro3.</p>
+
+        <p>The Web MIDI system does not currently allow for transmission at speeds that the Pro 3 will accept. Hopefully an upcoming
+          version of Web MIDI makes this feature available.</p>          
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+  </form>
+</div><!-- /.modal -->
+
+<div class="modal fade" id="share_wave">
+  <form id="evolver_download_form" onsubmit="shareWavetablef();return false;" method="get" target="_blank">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Share Wavetable</h4>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="job" value="share">
+		
+		<div class="form-group">
+		      	<label for="share_desc">Description</label>
+		      	<textarea class="form-control" required maxlength="140" placeholder="140 characters max; use #hashtags to categorize" id="share_desc" name="description"></textarea>
+		</div> 		
+		
+		<div class="form-group">
+    	  <label for="share_sig">Signature (optional)</label>
+		  <div class="input-group">
+		  <span class="input-group-addon" id="signature">@</span>
+		  <input type="text" class="form-control" maxlength="140" placeholder="20 characters max" id="share_sig" name="signature" aria-describedby="basic-addon3">
+		</div>        
+		</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-share"></span> Share Wavetable</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+  </form> 
+</div><!-- /.modal -->
+
+<iframe id="upload_frame" name="upload_frame"></iframe>
+
+  </body>
+</html>
