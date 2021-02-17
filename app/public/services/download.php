@@ -9,6 +9,9 @@ if (IO::get('code_override')) {
     $code = IO::get('code_override');
 }
 
+// Prevent access to rest of filesystem
+$code = preg_replace('/[^a-f0-9]/', '', $code);
+
 $wavetable_number = IO::get('number');
 $filepath = "../../../data/{$code}.syx";
 $syx = file_get_contents($filepath);

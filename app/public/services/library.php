@@ -15,10 +15,11 @@ if ($res) {
         $code = $row['code'];
         $name = $row['name'];
         $time = date('M d, Y', strtotime($row['share_time']));
+        $link = "Link: <a target=\"_blank\" href=\"http://wav2pro3.beigemaze.com/?{$code}\">http://wav2pro3.beigemaze.com/?{$code}</a>";
         if ($row['signature']) {$name .= " <span class=\"sig\">@{$row['signature']}</span>";}
         $button = "<button class=\"btn btn-sm btn-primary start\" onclick=\"overrideDownload('{$code}');\" title=\"Download SysEx\" data-toggle=\"modal\" data-target=\"#sysex_send\"><span class=\"glyphicon glyphicon-download\"></span> </button>";
         $button .= " <button class=\"btn btn-sm btn-primary start\" onclick=\"$('#wt{$id}').toggle();\" title=\"Info\"><span class=\"glyphicon glyphicon-info-sign\"></span> </button>";
-        $table .= "<tr><td class=\"wavetable_name col-md-9 col-lg-9\">{$name}\n<div style=\"display:none\" id=\"wt{$id}\" class=\"description\">{$row['description']}<br/><br/><i>Shared {$time}</i></div></td>";
+        $table .= "<tr><td class=\"wavetable_name col-md-9 col-lg-9\">{$name}\n<div style=\"display:none\" id=\"wt{$id}\" class=\"description\">{$row['description']}<br/><br/><i>Shared {$time}</i><br/><br/>{$link}</div></td>";
         $table .= "<td class=\"wavetable_name col-md-3 col-lg-3\">{$button}</td></tr>";
     }
 }

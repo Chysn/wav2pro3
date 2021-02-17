@@ -19,6 +19,7 @@ function wavetableHasUpdated(data)
 	$('#frame_size').prop('disabled', true);
 	$('#code_override').val('');
 	refreshMyWavetables();
+	$('#loading').fadeOut('slow');
 }
 
 function overrideDownload(code)
@@ -45,9 +46,17 @@ function fillFileName(el)
 	}
 }
 
-function badFileError() {$('#invalid_file').show();}
+function badFileError() 
+{
+	$('#invalid_file').show();
+	$('#loading').fadeOut('slow');
+}
 
-function wavetableTooBig() {$('#too_big').show();}
+function wavetableTooBig() 
+{
+	$('#too_big').show();
+	$('#loading').fadeOut('slow');
+}
 
 function shareSuccess() {$('#thanks').show();}
 
