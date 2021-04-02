@@ -3,6 +3,8 @@ session_start();
 require '../../private/tools/IO.php';
 
 $WAV_file = IO::file('wav');
+$WAV_high = IO::file('wav_high');
+$split = IO::post('split');
 $frame_size = IO::post('frame_size');
 $wavetable_name = IO::post('wavetable_name');
 $wavetable_name = substr(trim($wavetable_name), 0, 8);
@@ -18,7 +20,7 @@ if (preg_match('/\.syx$/i', $WAV_file['name'])) {
     $name = substr($syx, 8, 8);
     $name = trim($name); // Remove any trailing spaces    
 } else {
-    if ($WAV_file['size'] > 1050000) {
+    if ($WAV_file['size'] > 1050000 or $WAV_high['size'] > 1050000) {
         print "<script>window.top.window.wavetableTooBig();</script>\n";
         exit;
     }
@@ -28,14 +30,25 @@ if (preg_match('/\.syx$/i', $WAV_file['name'])) {
     // Try to convert the file into RAW
     $s = move_uploaded_file($WAV_file['tmp_name'], "../../../data/{$unique}.wav");
     if (!$s) {print "<script>window.top.window.badFileError();</script>";exit;}
-    $cmd = "/usr/local/bin/serum2pro3 \"{$wavetable_name}\" 33 {$frame_size} ../../../data/{$unique}.wav";
+    if ($split) {
+        $h = move_uploaded_file($WAV_high['tmp_name'], "../../../data/{$unique}-h.wav");
+        if (!$h) {print "<script>window.top.window.badFileError();</script>";exit;}
+        $files  = "../../../data/{$unique}.wav ../../../data/{$unique}.wav ";
+        $files .= "../../../data/{$unique}-h.wav ../../../data/{$unique}-h.wav";
+        $cmd = "/usr/local/bin/split2pro3 \"{$wavetable_name}\" 33 {$frame_size} {$files}";
+    } else {
+        $cmd = "/usr/local/bin/serum2pro3 \"{$wavetable_name}\" 33 {$frame_size} ../../../data/{$unique}.wav";
+    }
     $syx = shell_exec($cmd);
     $code = md5($syx); // Use MD5 as filename to avoid duplication
 
     // Remove wav
     unlink("../../../data/{$unique}.wav");
+    if ($split) {
+        unlink("../../../data/{$unique}-h.wav");
+    }
 
-    // Generate JSON array of sysex for eventual MIDI featur
+    // Generate JSON array of sysex for eventual MIDI feature
     $data = '';
     for ($i = 0; $i < strlen($syx); $i++)
     {

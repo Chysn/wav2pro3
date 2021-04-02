@@ -28,14 +28,17 @@
   <script src="js/interface.js"></script>
 
   <script>
-$(document).ready(function() {
-    var q = window.location.href.match(/\/\?(.*)/);
-    if (q[1] !== undefined) {
-        var hash = q[1];
-        overrideDownload(hash);
-        $('#sysex_send').modal('show');
-    }
-});
+  $(document).ready(function() {
+      var q = window.location.href.match(/\/\?([a-f0-9]{32})/);
+      if (q[1] !== undefined) {
+          var code = q[1];
+          overrideDownload(code);
+          refreshSharedWavetables(code);  
+          $('#collapseSession').collapse('hide');
+          $('#collapseShared').collapse('show');      
+          $('#sysex_send').modal('show');
+      }
+  });
   </script>
 
   </head>
@@ -100,7 +103,7 @@ $(document).ready(function() {
     	    
 	<div class="panel-body">
 	<div id="shared">
-    No shared wavetables...
+    Click Panel Header to Refresh
     </div>
 	  </div>
 	</div>
@@ -113,16 +116,16 @@ $(document).ready(function() {
 
 <div class="alert alert-danger" role="alert" id="too_big" style="display:none">
    <button type="button" class="close" onclick="$('#too_big').hide()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-   The WAV file you uploaded is too big. Maximum size is 1,050,000 bytes
+   The .wav file you uploaded is too big. Maximum size is 1,050,000 bytes
 </div>
 
 <div class="alert alert-danger" role="alert" id="invalid_file" style="display:none">
   <button type="button" class="close" onclick="$('#invalid_file').hide()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-  <strong>Sorry!</strong> The file you uploaded was not valid. Please provide a 16-bit WAV file or Pro 3 wavetable SysEx file.
+  <strong>Sorry!</strong> The file you uploaded was not valid. Please provide a 16-bit .wav file or Pro 3 wavetable SysEx file.
 </div>
 
 <div class="alert alert-success" role="alert" id="uploaded" style="display:none">
-  <button type="button" class="close" onclick="$('#uploaded').hide()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <button type="button" class="close" onclick="$('#uploaded').hide();" aria-label="Close"><span aria-hidden="true">&times;</span></button>
   <strong>Success!</strong> Your wavetable is ready for download!
 </div>
 
@@ -152,21 +155,34 @@ $(document).ready(function() {
                         <span class="glyphicon glyphicon-file"></span> Browse&hellip; <input type="file" name="wav" accept=".wav,.syx" id="upload_file" onchange="fillFileName(this)">
                     </span>
                 </span>
-                <input type="text" class="form-control" readonly id="upload_file_name" name="upload_file_name" placeholder="Upload WAV or Pro 3 Wavetable SysEx">
-                <span class="input-group-btn">
-       			 <button disabled id="upload_button" class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-upload"></span> Upload</button>
-            </span>
+                <input type="text" class="form-control" readonly id="upload_file_name" name="upload_file_name" placeholder="Upload .wav or Pro 3 Wavetable SysEx">
             </div>
 
-      <div class="input-group">
+      <div class="form-check wavoption">
+        <input type="checkbox" class="form-check-input" id="split" name="split" value="1" onclick="if ($('#split').prop('checked')) {$('#high_file').show('slow')} else {$('#high_file').hide('slow')}">
+        <label for="split">Split-Point Wavetable (Around F#3)?</label>
+      </div>
+
+
+      <div class="input-group" id="high_file" style="display:none">
+              <span class="input-group-btn">
+                  <span class="btn btn-primary btn-file">
+                      <span class="glyphicon glyphicon-file"></span> Browse&hellip; <input type="file" name="wav_high" accept=".wav" id="upload_file_high" onchange="fillHighFileName(this)">
+                  </span>
+              </span>
+              <input type="text" class="form-control" readonly id="upload_file_high_name" name="upload_file_high_name" placeholder="Upload .wav for Upper Wavetable">
+          </div>
+
+
+      <div class="input-group wavoption">
         <label for="wavetable_name">Wavetable Name: </label>
         <input type="text" autocomplete="off" maxlength="8" class="form-control" id="wavetable_name" name="wavetable_name">
       </div>
 
-      <div class="input-group">
+      <div class="input-group wavoption">
         <label for="frame_size">Frame Size: </label>
         <select class="form-control" name="frame_size" id="frame_size">
-          <option value="2048">2048 Samples (Serum)</option>
+          <option value="2048">2048 Samples (Serum, Vital)</option>
           <option value="1024">1024 Samples</option>
           <option value="512">512 Samples</option>
           <option value="256">256 Samples</option>
@@ -179,10 +195,11 @@ $(document).ready(function() {
 	  
 	  <div class="row separated">
 	  	  <div class="col-md-12 col-lg-12">
-          <div class="btn-group btn-group-justified" role="group" aria-label="options">	  
-			  <a disabled href="#" class="btn btn-primary wavoption" data-toggle="modal" data-target="#share_wave"><span class="glyphicon glyphicon-share-alt"></span> Share</a>
-        <a disabled href="#" class="btn btn-primary wavoption" data-toggle="modal" data-target="#sysex_send"><span class="glyphicon glyphicon-download"></span> SysEx</a>
-        <a disabled href="#" class="btn btn-primary wavoption" data-toggle="modal" data-target="#midi_send"><span class="glyphicon glyphicon-download"></span> MIDI</a>
+          <div class="btn-group btn-group-justified" role="group" aria-label="options">	
+        <a disabled href="#" id="upload_button" onclick="$('#upload_form').submit()" class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-upload"></span> Upload</a>
+        <a disabled href="#" class="btn btn-primary pro3option" data-toggle="modal" data-target="#sysex_send" onclick="$('#download_name').html('Download SysEx');"><span class="glyphicon glyphicon-download"></span> Download SysEx</a>
+        <a disabled href="#" id="pro3option-share" class="btn btn-primary pro3option" data-toggle="modal" data-target="#share_wave"><span class="glyphicon glyphicon-share-alt"></span> Share</a>
+        <a disabled href="#" class="btn btn-primary pro3option" data-toggle="modal" data-target="#midi_send"><span class="glyphicon glyphicon-download"></span> MIDI</a>
 		  </div>
 		  </div>
 	  </div>
@@ -204,7 +221,7 @@ $(document).ready(function() {
 	
 	<p><i>WAV2Pro3</i> is an online wavetable conversion application for users of the <strong>Sequential Pro 3</strong> synthesizer.</p>
 	
-	<p>It allows you to upload a WAV file containing a group of single-cycle waveforms, and then download a wavetable system exclusive file.</p>
+	<p>It allows you to upload a .wav file containing a group of single-cycle waveforms, and then download a wavetable system exclusive file.</p>
 	
   <p><i>WAV2Pro3</i> is an open-source project, and can be found on <a href="https://github.com/Chysn/wav2pro3" target="_blank">GitHub</a>.</p>
 
@@ -223,18 +240,31 @@ $(document).ready(function() {
 	<div class="panel-heading"><span class="panel-title">What to Upload</span></div>
 	<div class="panel-body">
 	
-    <p>WAV2Pro3 accepts wavetables as multiple waveforms in a <strong>single WAV file</strong>. Requirements are:</p>
+    <p>WAV2Pro3 accepts wavetables as multiple waveforms in a <strong>single .wav file</strong>. Requirements are:</p>
     <ul>
-      <li>The WAV file data must be at 16-bits</li>
-      <li>The WAV file must be 1,050,000 bytes or less</li>
-      <li>Any number of waveforms may be in the WAV file. WAV2Pro3 will automatically resize the wavetable to 16 waveforms by either morphing missing waveforms, or dropping extra waveforms</li>
+      <li>The .wav file data must be at 16-bits</li>
+      <li>The .wav file must be 1,050,000 bytes or less</li>
+      <li>Any number of waveforms may be in the .wav file. WAV2Pro3 will automatically resize the wavetable to 16 waveforms by either morphing missing waveforms, or dropping extra waveforms</li>
     </ul>
     
-    <p>Serum Tips: From the Serum wavetable editor, choose or create your wavetable. Then, click on the Export menu, then select "Export All As 16-bit (.wav)..." Choose a file path and name on your computer. Then click Browse on this page to find your .wav file.</p>
+    <p><strong>Serum Tips:</strong> From the Serum wavetable editor, choose or create your wavetable. Then, click on the Export menu, then select "Export All As 16-bit (.wav)..." Choose a file path and name on your computer. Then click Browse on this page to find your .wav file.</p>
+
+    <p><strong>Vital Tips:</strong> From the Vital wavetable editor, choose or create your wavetable. Then, click on the top menu icon, then select "Export to .wav File" Choose a file path and name on your computer. Then click Browse on this page to find your .wav file.</p>
+
+<h4>Uploading SysEx</h4>
 
     <p>WAV2Pro3 also accepts <strong>Pro 3 wavetable SysEx files</strong>. You can use this to change the wavetable position or share wavetables that you have already created.</p>
 
+    <p>If you upload a SysEx file, the Wavetable Name and Frame Size values are unused.</p>
+
+<h4>Split-Point Wavetables</h4>
+
+    <p>WAV2Pro3 also accepts an optional <strong>second .wav file</strong>, with the same .wav requirements as above.</p>
+
+    <p>If you set the "Split-Point Wavetable" checkbox and specify a second .wav file, the first wavetable will be active in the bottom half of the key range (up to around F#3) and the second wavetable will be active in the top half of the key range.</p>
     
+    <p>The "Split-Point" option is disregarded if the first uploaded file is a SysEx file. Split-Point generation requires two .wav files.</p>
+
 	<p><a href="#"><span class="glyphicon glyphicon-home"></span> Top</a></p>
 	
 	</div>
@@ -250,7 +280,7 @@ $(document).ready(function() {
 	<div class="panel-heading"><span class="panel-title">Privacy</span></div>
 	<div class="panel-body">
 		
-	<p><i>WAV2Pro3</i> strips metadata from uploaded WAV files. If you share your wavetables, none of the original XML metadata
+	<p><i>WAV2Pro3</i> strips metadata from uploaded .wav files. If you share your wavetables, none of the original XML metadata
 	will be saved in the database. Wavetables downloaded as system exclusive files will contain only the data necessary to describe the
   physical characteristics of the waveforms.</p>
   
@@ -304,7 +334,7 @@ $(document).ready(function() {
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">Download SysEx</h4>
+        <h4 id="download_name" class="modal-title">Download SysEx</h4>
       </div>
       <div class="modal-body">
         <input type="hidden" name="type" value="sysex">

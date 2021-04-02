@@ -4,9 +4,9 @@ require '../../private/tools/IO.php';
 
 $code = IO::session('code');
 if ($code and file_exists("../../../data/{$code}.syx")) {
-    $description = IO::get('desc');
-    $signature = IO::get('sig');
-    $name = IO::session('name');
+    $description = strip_tags(IO::get('desc'));
+    $signature = strip_tags(IO::get('sig'));
+    $name = strip_tags(IO::session('name'));
     IO::sanitize($description);
     IO::sanitize($signature);
     IO::sanitize($name);

@@ -80,3 +80,11 @@ TABLE TD.align_right {
 TABLE TD.align_right .btn {
 	margin-left: 5px;
 }
+
+LABEL {
+  margin-top: 8px;
+}
+
+H4 {
+  padding-top: 16px;
+}
